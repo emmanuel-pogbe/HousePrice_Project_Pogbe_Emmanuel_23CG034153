@@ -1,0 +1,4 @@
+Name: Pogbe Emmanuel
+Matric Number: 23CG034153
+Machine Learning Algorithm Used: Random Forest Regressor
+Model Persistence Method: Joblib

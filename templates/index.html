@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Prediction System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .model-info {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+
+        .model-info-text {
+            color: #555;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            margin-bottom: 8px;
+        }
+
+        .input-helper {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-label {
+            font-size: 0.95em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .result-price {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .result-subtext {
+            font-size: 0.9em;
+            opacity: 0.85;
+            line-height: 1.6;
+        }
+
+        .error {
+            display: none;
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #c33;
+            margin-bottom: 20px;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .error-icon {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .success {
+            display: none;
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3c3;
+            margin-bottom: 20px;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .feature-description {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .feature-desc-item {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+            padding-left: 15px;
+        }
+
+        .feature-desc-item strong {
+            color: #333;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .reset-btn {
+            background: #999;
+            margin-top: 15px;
+        }
+
+        .reset-btn:hover {
+            background: #777;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .result-price {
+                font-size: 2em;
+            }
+
+            .feature-description {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏠 House Price Predictor</h1>
+            <p>Predict house prices using AI-powered machine learning</p>
+        </div>
+
+        <!-- Model Information -->
+        <div class="model-info">
+            <div class="model-info-text">
+                <strong>📊 Model Accuracy:</strong> 88.55% R² Score<br>
+                <strong>🎯 Prediction Error:</strong> ±$18,732 (MAE)<br>
+                <strong>🤖 Algorithm:</strong> Random Forest Regressor
+            </div>
+        </div>
+
+        <!-- Feature Descriptions -->
+        <div class="feature-description">
+            <div class="feature-desc-item">
+                <strong>Overall Quality</strong>
+                <span>1-10 rating (10 = Excellent)</span>
+            </div>
+            <div class="feature-desc-item">
+                <strong>Living Area</strong>
+                <span>Square feet above grade</span>
+            </div>
+            <div class="feature-desc-item">
+                <strong>Basement Area</strong>
+                <span>Total basement square feet</span>
+            </div>
+            <div class="feature-desc-item">
+                <strong>Garage Capacity</strong>
+                <span>Number of cars it holds</span>
+            </div>
+            <div class="feature-desc-item">
+                <strong>Year Built</strong>
+                <span>Original construction date</span>
+            </div>
+            <div class="feature-desc-item">
+                <strong>Neighborhood</strong>
+                <span>Physical location in city</span>
+            </div>
+        </div>
+
+        <!-- Error Messages -->
+        <div id="errorMsg" class="error"></div>
+        <div id="successMsg" class="success"></div>
+
+        <!-- Prediction Form -->
+        <form id="predictionForm">
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="OverallQual">Overall Quality (1-10)</label>
+                    <input 
+                        type="number" 
+                        id="OverallQual" 
+                        name="OverallQual" 
+                        min="1" 
+                        max="10" 
+                        value="7"
+                        required
+                    >
+                    <div class="input-helper">Rate the overall material and finish quality</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="YearBuilt">Year Built</label>
+                    <input 
+                        type="number" 
+                        id="YearBuilt" 
+                        name="YearBuilt" 
+                        min="1800" 
+                        max="2030" 
+                        value="2005"
+                        required
+                    >
+                    <div class="input-helper">Original construction date</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="GrLivArea">Living Area (sq ft)</label>
+                    <input 
+                        type="number" 
+                        id="GrLivArea" 
+                        name="GrLivArea" 
+                        min="100" 
+                        max="10000" 
+                        value="1500"
+                        required
+                    >
+                    <div class="input-helper">Above grade living area</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="TotalBsmtSF">Basement Area (sq ft)</label>
+                    <input 
+                        type="number" 
+                        id="TotalBsmtSF" 
+                        name="TotalBsmtSF" 
+                        min="0" 
+                        max="10000" 
+                        value="1000"
+                        required
+                    >
+                    <div class="input-helper">Total basement square feet</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="GarageCars">Garage Capacity</label>
+                    <input 
+                        type="number" 
+                        id="GarageCars" 
+                        name="GarageCars" 
+                        min="0" 
+                        max="5" 
+                        value="2"
+                        required
+                    >
+                    <div class="input-helper">Number of cars the garage holds</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="Neighborhood">Neighborhood</label>
+                    <select id="Neighborhood" name="Neighborhood" required>
+                        <option value="">-- Select Neighborhood --</option>
+                    </select>
+                    <div class="input-helper">Physical location within the city</div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="predictBtn">
+                💰 Predict House Price
+            </button>
+        </form>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            Making prediction...
+        </div>
+
+        <!-- Prediction Result -->
+        <div id="result" class="result">
+            <div class="result-label">💡 Predicted Price</div>
+            <div class="result-price" id="resultPrice">$0.00</div>
+            <div class="result-subtext">
+                <div>Based on Random Forest model with 88.55% accuracy</div>
+                <div style="margin-top: 10px; opacity: 0.8;">
+                    Average error: <span id="resultMAE">$18,732</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Button -->
+        <button type="button" id="resetBtn" class="reset-btn" style="display: none;">
+            ↺ Make Another Prediction
+        </button>
+    </div>
+
+    <script>
+        // ====================================================================
+        // INITIALIZATION
+        // ====================================================================
+
+        // Load neighborhoods on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNeighborhoods();
+            setupFormHandlers();
+        });
+
+        // ====================================================================
+        // LOAD NEIGHBORHOODS FROM SERVER
+        // ====================================================================
+
+        function loadNeighborhoods() {
+            fetch('/api/neighborhoods')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const select = document.getElementById('Neighborhood');
+                        data.neighborhoods.forEach(neighborhood => {
+                            const option = document.createElement('option');
+                            option.value = neighborhood;
+                            option.textContent = neighborhood;
+                            select.appendChild(option);
+                        });
+                        // Select first neighborhood by default
+                        if (data.neighborhoods.length > 0) {
+                            select.value = data.neighborhoods[0];
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading neighborhoods:', error);
+                    showError('Failed to load neighborhoods');
+                });
+        }
+
+        // ====================================================================
+        // FORM HANDLERS
+        // ====================================================================
+
+        function setupFormHandlers() {
+            const form = document.getElementById('predictionForm');
+            const resetBtn = document.getElementById('resetBtn');
+
+            form.addEventListener('submit', handlePrediction);
+            resetBtn.addEventListener('click', resetForm);
+        }
+
+        function handlePrediction(e) {
+            e.preventDefault();
+
+            // Clear previous messages
+            clearMessages();
+
+            // Get form data
+            const formData = {
+                OverallQual: parseInt(document.getElementById('OverallQual').value),
+                GrLivArea: parseInt(document.getElementById('GrLivArea').value),
+                TotalBsmtSF: parseInt(document.getElementById('TotalBsmtSF').value),
+                GarageCars: parseInt(document.getElementById('GarageCars').value),
+                YearBuilt: parseInt(document.getElementById('YearBuilt').value),
+                Neighborhood: document.getElementById('Neighborhood').value
+            };
+
+            // Validate data
+            if (!validateInput(formData)) {
+                return;
+            }
+
+            // Show loading indicator
+            showLoading(true);
+            document.getElementById('predictBtn').disabled = true;
+
+            // Send prediction request
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+                document.getElementById('predictBtn').disabled = false;
+
+                if (data.success) {
+                    displayResult(data);
+                } else {
+                    showError(data.error || 'Prediction failed');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                document.getElementById('predictBtn').disabled = false;
+                showError('Error: ' + error.message);
+                console.error('Prediction error:', error);
+            });
+        }
+
+        // ====================================================================
+        // VALIDATION
+        // ====================================================================
+
+        function validateInput(data) {
+            // Validate Overall Quality
+            if (data.OverallQual < 1 || data.OverallQual > 10) {
+                showError('Overall Quality must be between 1 and 10');
+                return false;
+            }
+
+            // Validate Living Area
+            if (data.GrLivArea < 100 || data.GrLivArea > 10000) {
+                showError('Living Area must be between 100 and 10000 sq ft');
+                return false;
+            }
+
+            // Validate Basement Area
+            if (data.TotalBsmtSF < 0 || data.TotalBsmtSF > 10000) {
+                showError('Basement Area must be between 0 and 10000 sq ft');
+                return false;
+            }
+
+            // Validate Garage Capacity
+            if (data.GarageCars < 0 || data.GarageCars > 5) {
+                showError('Garage Capacity must be between 0 and 5 cars');
+                return false;
+            }
+
+            // Validate Year Built
+            if (data.YearBuilt < 1800 || data.YearBuilt > 2030) {
+                showError('Year Built must be between 1800 and 2030');
+                return false;
+            }
+
+            // Validate Neighborhood
+            if (!data.Neighborhood) {
+                showError('Please select a neighborhood');
+                return false;
+            }
+
+            return true;
+        }
+
+        // ====================================================================
+        // DISPLAY RESULTS
+        // ====================================================================
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            const resultPrice = document.getElementById('resultPrice');
+            const resultMAE = document.getElementById('resultMAE');
+
+            resultPrice.textContent = data.formatted_price;
+            resultMAE.textContent = data.model_mae;
+
+            resultDiv.classList.add('show');
+
+            // Show reset button
+            document.getElementById('resetBtn').style.display = 'block';
+
+            // Hide form
+            document.getElementById('predictionForm').style.display = 'none';
+        }
+
+        function resetForm() {
+            // Clear form
+            document.getElementById('predictionForm').reset();
+            document.getElementById('OverallQual').value = '7';
+            document.getElementById('GrLivArea').value = '1500';
+            document.getElementById('TotalBsmtSF').value = '1000';
+            document.getElementById('GarageCars').value = '2';
+            document.getElementById('YearBuilt').value = '2005';
+
+            // Reset neighborhood to first option
+            const select = document.getElementById('Neighborhood');
+            if (select.options.length > 1) {
+                select.selectedIndex = 1;
+            }
+
+            // Hide result and reset button
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('resetBtn').style.display = 'none';
+
+            // Show form
+            document.getElementById('predictionForm').style.display = 'block';
+
+            // Clear messages
+            clearMessages();
+
+            // Focus on first input
+            document.getElementById('OverallQual').focus();
+        }
+
+        // ====================================================================
+        // MESSAGE DISPLAY FUNCTIONS
+        // ====================================================================
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.style.display = 'block';
+            } else {
+                loading.style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.innerHTML = `<span class="error-icon">⚠️</span>${message}`;
+            errorDiv.classList.add('show');
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMsg');
+            successDiv.innerHTML = `<span class="error-icon">✓</span>${message}`;
+            successDiv.classList.add('show');
+        }
+
+        function clearMessages() {
+            document.getElementById('errorMsg').classList.remove('show');
+            document.getElementById('successMsg').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
