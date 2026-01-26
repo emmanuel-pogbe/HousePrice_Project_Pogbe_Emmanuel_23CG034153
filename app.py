@@ -6,7 +6,6 @@ Flask-based web interface for the trained Random Forest model
 from flask import Flask, render_template, request, jsonify
 import joblib
 import pandas as pd
-import numpy as np
 import os
 
 # Initialize Flask app
@@ -30,17 +29,35 @@ def load_model_components():
     try:
         # Get the directory where this script is located
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        model_dir = os.path.abspath(os.path.join(script_dir, ".", "model"))
+        model_dir = os.path.join(script_dir, "model")
         
-        # Try loading from model subdirectory first, then fallback to script directory
-        for base_path in [model_dir, script_dir]:
+        # Define possible paths to search for model files
+        search_paths = [
+            model_dir,           # ./model/ subdirectory
+            script_dir,          # same directory as script
+            os.getcwd(),         # current working directory
+            os.path.join(os.getcwd(), "model")  # ./model/ from current working directory
+        ]
+        
+        # Try loading from each path until successful
+        for base_path in search_paths:
+            if os.path.exists(base_path):
             try:
-                model = joblib.load(os.path.join(base_path, 'house_price_model.pkl'))
-                scaler = joblib.load(os.path.join(base_path, 'feature_scaler.pkl'))
-                label_encoders = joblib.load(os.path.join(base_path, 'label_encoders.pkl'))
-                metadata = joblib.load(os.path.join(base_path, 'model_metadata.pkl'))
+                    model_path = os.path.join(base_path, 'house_price_model.pkl')
+                    scaler_path = os.path.join(base_path, 'feature_scaler.pkl')
+                    encoders_path = os.path.join(base_path, 'label_encoders.pkl')
+                    metadata_path = os.path.join(base_path, 'model_metadata.pkl')
+                    
+                    # Check if all required files exist
+                    if all(os.path.exists(path) for path in [model_path, scaler_path, encoders_path, metadata_path]):
+                        model = joblib.load(model_path)
+                        scaler = joblib.load(scaler_path)
+                        label_encoders = joblib.load(encoders_path)
+                        metadata = joblib.load(metadata_path)
+                        print(f"✓ Model files loaded from: {base_path}")
                 break
-            except FileNotFoundError:
+                except Exception as e:
+                    print(f"  Failed to load from {base_path}: {str(e)}")
                 continue
         
         # If still not found, raise error
