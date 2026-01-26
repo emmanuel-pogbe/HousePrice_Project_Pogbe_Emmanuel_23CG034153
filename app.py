@@ -42,7 +42,7 @@ def load_model_components():
         # Try loading from each path until successful
         for base_path in search_paths:
             if os.path.exists(base_path):
-            try:
+                try:
                     model_path = os.path.join(base_path, 'house_price_model.pkl')
                     scaler_path = os.path.join(base_path, 'feature_scaler.pkl')
                     encoders_path = os.path.join(base_path, 'label_encoders.pkl')
@@ -55,7 +55,6 @@ def load_model_components():
                         label_encoders = joblib.load(encoders_path)
                         metadata = joblib.load(metadata_path)
                         print(f"✓ Model files loaded from: {base_path}")
-                break
                 except Exception as e:
                     print(f"  Failed to load from {base_path}: {str(e)}")
                 continue
