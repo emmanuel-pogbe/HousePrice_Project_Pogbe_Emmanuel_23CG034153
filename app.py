@@ -11,7 +11,7 @@ from sklearn.preprocessing import LabelEncoder
 import os
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__,template_folder="templates")
 
 # Global variables for loaded model components
 model = None
@@ -31,7 +31,7 @@ def load_model_components():
     try:
         # Get the directory where this script is located
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        model_dir = os.path.abspath(os.path.join(script_dir, "..", "model"))
+        model_dir = os.path.abspath(os.path.join(script_dir, ".", "model"))
         
         # Try loading from model subdirectory first, then fallback to script directory
         for base_path in [model_dir, script_dir]:
